@@ -1,0 +1,56 @@
+﻿@page
+@model MantenimientoEscolarCliente.Models.SolicitudViewModel
+
+<h2>Detalles de la Solicitud</h2>
+
+<div>
+    <h4>Solicitud</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            ID
+        </dt>
+        <dd class="col-sm-10">
+            @Model.idSolicitud
+        </dd>
+        <dt class="col-sm-2">
+            Usuario
+        </dt>
+        <dd class="col-sm-10">
+            @Model.nombreUsuario
+        </dd>
+        <dt class="col-sm-2">
+            Categoría
+        </dt>
+        <dd class="col-sm-10">
+            @Model.nombreCategoria
+        </dd>
+        <dt class="col-sm-2">
+            Descripción
+        </dt>
+        <dd class="col-sm-10">
+            @Model.descripcion
+        </dd>
+        <dt class="col-sm-2">
+            Ubicación
+        </dt>
+        <dd class="col-sm-10">
+            @Model.ubicacion
+        </dd>
+        <dt class="col-sm-2">
+            Fecha
+        </dt>
+        <dd class="col-sm-10">
+            @Model.fecha.ToString("dd/MM/yyyy")
+        </dd>
+        <dt class="col-sm-2">
+            Estado
+        </dt>
+        <dd class="col-sm-10">
+            @Model.estado
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Index">Volver a la lista</a>
+</div>
