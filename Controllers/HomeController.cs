@@ -1,32 +1,49 @@
-using System.Diagnostics;
 using MantenimientoEscolarCliente.Models;
+using MantenimientoEscolarCliente.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MantenimientoEscolarCliente.Controllers
+public class HomeController : Controller
 {
-    public class HomeController : Controller
+    private readonly AuthServiceCliente _authService;
+
+    public HomeController(AuthServiceCliente authService)
     {
-        private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
-        {
-            _logger = logger;
-        }
-
-        public IActionResult Index()
-        {
-            return View();
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
+        _authService = authService;
     }
+
+    [HttpGet]
+    public IActionResult Index()
+    {
+        return View(new UsuarioLogin());
+    }
+
+
+    [HttpPost]
+    public async Task<IActionResult> Index(UsuarioLogin model)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var result = await _authService.LoginAsync(model.Correo);
+
+        if (result != null)
+        {
+            Response.Cookies.Append("AuthToken", result.Token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddHours(1)
+            });
+
+            TempData["Usuario"] = result.Nombre;
+            TempData["Rol"] = result.TipoUsuario;
+
+            return RedirectToAction("Index", "Solicitudes");
+        }
+
+        ModelState.AddModelError(string.Empty, "Correo inválido");
+        return View(model);
+    }
+
 }

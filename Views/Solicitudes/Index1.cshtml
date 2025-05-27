@@ -1,0 +1,30 @@
+﻿@model MantenimientoEscolarCliente.Models.SolicitudViewModel
+
+<h2>Editar Solicitud</h2>
+
+<form asp-action="Editar" method="post">
+    <input type="hidden" asp-for="idSolicitud" />
+
+    <div class="mb-3">
+        <label class="form-label">Descripción</label>
+        <input asp-for="descripcion" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Ubicación</label>
+        <input asp-for="ubicacion" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Estado</label>
+        <select asp-for="estado" class="form-select" required>
+            <option value="">-- Selecciona Estado --</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="En Proceso">En Proceso</option>
+            <option value="Completado">Completado</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-success">Actualizar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

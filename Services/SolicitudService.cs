@@ -1,63 +1,101 @@
 ﻿using MantenimientoEscolarCliente.Models;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
+
 namespace MantenimientoEscolarCliente.Services
 {
     public class SolicitudService
     {
         private readonly HttpClient _httpClient;
+        private string? _token;
 
-        public SolicitudService(IHttpClientFactory httpClientFactory)
+        public SolicitudService(HttpClient httpClient)
         {
-            _httpClient = httpClientFactory.CreateClient("ApiClient");
+            _httpClient = httpClient;
+        }
+
+        public void EstablecerToken(string token)
+        {
+            _token = token;
+        }
+
+        private void AgregarTokenAHeaders()
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = null;
+
+            if (!string.IsNullOrEmpty(_token))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+            }
         }
 
         public async Task<List<SolicitudViewModel>> ObtenerTodasAsync()
         {
+            if (string.IsNullOrEmpty(_token))
+                return new List<SolicitudViewModel>();
+
+            AgregarTokenAHeaders();
+
             var response = await _httpClient.GetAsync("api/solicitudes");
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(content); // Para depuración
-
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
-
-                var solicitudes = JsonSerializer.Deserialize<List<SolicitudViewModel>>(content, options);
-                return solicitudes ?? new List<SolicitudViewModel>();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                return JsonSerializer.Deserialize<List<SolicitudViewModel>>(content, options) ?? new List<SolicitudViewModel>();
             }
-            else
-            {
-                // Manejo de errores según sea necesario
-                return new List<SolicitudViewModel>();
-            }
+
+            return new List<SolicitudViewModel>();
         }
 
-
-        public async Task<SolicitudViewModel> ObtenerPorIdAsync(int id)
+        public async Task<List<SolicitudViewModel>> ObtenerPorIdAsync(int id)
         {
+            AgregarTokenAHeaders();
+
             var response = await _httpClient.GetAsync($"api/solicitudes/{id}");
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(content); // Para depuración
-
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
-
-                var solicitud = JsonSerializer.Deserialize<SolicitudViewModel>(content, options);
-                return solicitud;
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                return JsonSerializer.Deserialize<List<SolicitudViewModel>>(content, options) ?? new List<SolicitudViewModel>();
             }
-            else
-            {
-                // Manejo de errores según sea necesario
-                return null;
-            }
+
+            return new List<SolicitudViewModel>();
         }
 
+        public async Task CrearAsync(CrearSolicitudDTO solicitud)
+        {
+            AgregarTokenAHeaders();
 
+            var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+            var json = JsonSerializer.Serialize(solicitud, options);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync("api/solicitudes", content);
+
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task ActualizarAsync(SolicitudViewModel solicitud)
+        {
+            AgregarTokenAHeaders();
+
+            var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+            var json = JsonSerializer.Serialize(solicitud, options);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PutAsync($"api/solicitudes/{solicitud.idSolicitud}", content);
+
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task EliminarAsync(int id)
+        {
+            AgregarTokenAHeaders();
+
+            var response = await _httpClient.DeleteAsync($"api/solicitudes/{id}");
+
+            response.EnsureSuccessStatusCode();
+        }
     }
 }

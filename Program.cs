@@ -5,12 +5,34 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+//builder.Services.AddSession();
+
+
+// Configura HttpClient general para autenticación
+builder.Services.AddHttpClient<AuthServiceCliente>(client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5222/");
+    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+});
+
+// Configura HttpClient con nombre para solicitudes
 builder.Services.AddHttpClient("ApiClient", client =>
 {
     client.BaseAddress = new Uri("http://localhost:5222/");
     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
-builder.Services.AddScoped<SolicitudService>();
+
+// Registro explícito de IHttpContextAccessor y SolicitudService
+//builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+builder.Services.AddScoped<SolicitudService>(provider =>
+{
+    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient("ApiClient");
+
+    return new SolicitudService(httpClient);
+});
+
 
 var app = builder.Build();
 
@@ -18,7 +40,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -27,7 +48,9 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthorization();
+//app.UseSession();
+app.UseAuthentication();  
+//app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",

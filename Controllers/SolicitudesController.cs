@@ -3,6 +3,8 @@ using MantenimientoEscolarCliente.Services;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using MantenimientoEscolarCliente.Models;
+using System.Linq;
+
 namespace MantenimientoEscolarCliente.Controllers
 {
     public class SolicitudesController : Controller
@@ -14,20 +16,107 @@ namespace MantenimientoEscolarCliente.Controllers
             _solicitudService = solicitudService;
         }
 
+        private void EstablecerTokenDesdeCookie()
+        {
+            if (Request.Cookies.TryGetValue("AuthToken", out var token))
+            {
+                _solicitudService.EstablecerToken(token);
+            }
+        }
+
         public async Task<IActionResult> Index()
         {
+            EstablecerTokenDesdeCookie();
             var solicitudes = await _solicitudService.ObtenerTodasAsync();
             return View(solicitudes);
         }
 
-        public async Task<IActionResult> Detalles(int id)
+        public async Task<IActionResult> SolicitudesPorUsuario(int id)
         {
-            var solicitud = await _solicitudService.ObtenerPorIdAsync(id);
-            if (solicitud == null)
+            EstablecerTokenDesdeCookie();
+            var solicitudes = await _solicitudService.ObtenerPorIdAsync(id);
+            if (solicitudes == null || !solicitudes.Any())
             {
                 return NotFound();
             }
+
+            return View("Index", solicitudes);
+        }
+
+        public IActionResult Crear() => View();
+
+        [HttpPost]
+        public async Task<IActionResult> Crear(SolicitudViewModel solicitud)
+        {
+            if (!ModelState.IsValid)
+                return View(solicitud);
+
+            EstablecerTokenDesdeCookie();
+
+            var crearSolicitud = new CrearSolicitudDTO
+            {
+                usuarioId = solicitud.usuarioId,
+                categoriaId = solicitud.categoriaId,
+                descripcion = solicitud.descripcion,
+                ubicacion = solicitud.ubicacion,
+                fecha = solicitud.fecha,
+                estado = solicitud.estado
+            };
+
+            await _solicitudService.CrearAsync(crearSolicitud);
+
+            return RedirectToAction("Index");
+        }
+
+        public async Task<IActionResult> Editar(int id)
+        {
+            EstablecerTokenDesdeCookie();
+            var solicitudes = await _solicitudService.ObtenerPorIdAsync(id);
+            var solicitud = solicitudes?.FirstOrDefault();
+            if (solicitud == null)
+                return NotFound();
+
             return View(solicitud);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Editar(SolicitudViewModel solicitud)
+        {
+            if (!ModelState.IsValid)
+                return View(solicitud);
+
+            EstablecerTokenDesdeCookie();
+
+            try
+            {
+                await _solicitudService.ActualizarAsync(solicitud);
+                TempData["SuccessMessage"] = "Solicitud actualizada correctamente.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error al actualizar solicitud: {ex.Message}";
+                return View(solicitud);
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Eliminar(int id)
+        {
+            EstablecerTokenDesdeCookie();
+
+            try
+            {
+                await _solicitudService.EliminarAsync(id);
+                TempData["SuccessMessage"] = "Solicitud eliminada correctamente.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error al eliminar solicitud: {ex.Message}";
+            }
+
+            return RedirectToAction("Index");
         }
     }
 }

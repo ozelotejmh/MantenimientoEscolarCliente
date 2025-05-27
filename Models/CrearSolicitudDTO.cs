@@ -1,19 +1,26 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace MantenimientoEscolarCliente.Models
 {
-    public class SolicitudViewModel
+    public class CrearSolicitudDTO
     {
-        public int idSolicitud { get; set; }
+        [Required]
         public int usuarioId { get; set; }
-        public string nombreUsuario { get; set; }
-        public string correo { get; set; }
-        public string tipoUsuario { get; set; }
+
+        [Required]
         public int categoriaId { get; set; }
-        public string nombreCategoria { get; set; }
+
+        [Required]
         public string descripcion { get; set; }
+
+        [Required]
         public string ubicacion { get; set; }
+
+        [Required]
         public DateTime fecha { get; set; }
+
+        [Required]
         public string estado { get; set; }
     }
 }

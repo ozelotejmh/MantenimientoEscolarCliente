@@ -1,0 +1,33 @@
+﻿@model List<MantenimientoEscolarCliente.Models.SolicitudViewModel>
+
+<h2>Solicitudes de @Model.FirstOrDefault()?.nombreUsuario</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Categoría</th>
+            <th>Descripción</th>
+            <th>Ubicación</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var solicitud in Model)
+        {
+            <tr>
+                <td>@solicitud.idSolicitud</td>
+                <td>@solicitud.nombreCategoria</td>
+                <td>@solicitud.descripcion</td>
+                <td>@solicitud.ubicacion</td>
+                <td>@solicitud.fecha.ToString("dd/MM/yyyy")</td>
+                <td>@solicitud.estado</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div>
+    <a asp-action="Index">Volver a la lista</a>
+</div>
