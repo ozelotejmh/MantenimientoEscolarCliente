@@ -46,24 +46,26 @@ namespace MantenimientoEscolarCliente.Controllers
         public IActionResult Crear() => View();
 
         [HttpPost]
-        public async Task<IActionResult> Crear(SolicitudViewModel solicitud)
+        public async Task<IActionResult> Crear(CrearSolicitudDTO solicitud)
         {
             if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Hay errores en el formulario.";
                 return View(solicitud);
+            }
 
             EstablecerTokenDesdeCookie();
 
-            var crearSolicitud = new CrearSolicitudDTO
+            try
             {
-                usuarioId = solicitud.usuarioId,
-                categoriaId = solicitud.categoriaId,
-                descripcion = solicitud.descripcion,
-                ubicacion = solicitud.ubicacion,
-                fecha = solicitud.fecha,
-                estado = solicitud.estado
-            };
-
-            await _solicitudService.CrearAsync(crearSolicitud);
+                await _solicitudService.CrearAsync(solicitud);
+                TempData["SuccessMessage"] = "Solicitud creada correctamente.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error al crear solicitud: {ex.Message}";
+                return View(solicitud);
+            }
 
             return RedirectToAction("Index");
         }
@@ -87,9 +89,17 @@ namespace MantenimientoEscolarCliente.Controllers
 
             EstablecerTokenDesdeCookie();
 
+            var actualizarDto = new ActualizarSolicitudDTO
+            {
+                idSolicitud = solicitud.idSolicitud,
+                descripcion = solicitud.descripcion,
+                ubicacion = solicitud.ubicacion,
+                estado = solicitud.estado
+            };
+
             try
             {
-                await _solicitudService.ActualizarAsync(solicitud);
+                await _solicitudService.ActualizarAsync(actualizarDto);
                 TempData["SuccessMessage"] = "Solicitud actualizada correctamente.";
             }
             catch (Exception ex)

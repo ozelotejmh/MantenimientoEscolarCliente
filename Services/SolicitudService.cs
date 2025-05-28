@@ -69,14 +69,22 @@ namespace MantenimientoEscolarCliente.Services
 
             var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
             var json = JsonSerializer.Serialize(solicitud, options);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
 
+            Console.WriteLine("JSON ENVIADO:");
+            Console.WriteLine(json);
+
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
             var response = await _httpClient.PostAsync("api/solicitudes", content);
 
-            response.EnsureSuccessStatusCode();
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("RESPUESTA:");
+            Console.WriteLine(responseContent);
+
+            response.EnsureSuccessStatusCode(); // si falla, lanza excepción
         }
 
-        public async Task ActualizarAsync(SolicitudViewModel solicitud)
+
+        public async Task ActualizarAsync(ActualizarSolicitudDTO solicitud)
         {
             AgregarTokenAHeaders();
 
@@ -86,8 +94,13 @@ namespace MantenimientoEscolarCliente.Services
 
             var response = await _httpClient.PutAsync($"api/solicitudes/{solicitud.idSolicitud}", content);
 
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("RESPUESTA UPDATE:");
+            Console.WriteLine(responseContent);
+
             response.EnsureSuccessStatusCode();
         }
+
 
         public async Task EliminarAsync(int id)
         {
