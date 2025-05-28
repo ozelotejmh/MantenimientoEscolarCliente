@@ -69,7 +69,7 @@ namespace MantenimientoEscolarCliente.Controllers
 
             return RedirectToAction("Index");
         }
-
+        [HttpGet]
         public async Task<IActionResult> Editar(int id)
         {
             EstablecerTokenDesdeCookie();
@@ -78,14 +78,14 @@ namespace MantenimientoEscolarCliente.Controllers
             if (solicitud == null)
                 return NotFound();
 
-            return View(solicitud);
+            return View("Editar", solicitud);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Editar(SolicitudViewModel solicitud)
+        //[HttpPost]
+        public async Task<IActionResult> EditarVista(ActualizarSolicitudDTO solicitud)
         {
             if (!ModelState.IsValid)
-                return View(solicitud);
+                return View("Editar", solicitud);
 
             EstablecerTokenDesdeCookie();
 
@@ -105,7 +105,7 @@ namespace MantenimientoEscolarCliente.Controllers
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"Error al actualizar solicitud: {ex.Message}";
-                return View(solicitud);
+                return View("Editar", solicitud);
             }
 
             return RedirectToAction("Index");
@@ -121,12 +121,34 @@ namespace MantenimientoEscolarCliente.Controllers
                 await _solicitudService.EliminarAsync(id);
                 TempData["SuccessMessage"] = "Solicitud eliminada correctamente.";
             }
+            catch (HttpRequestException ex)
+            {
+                TempData["ErrorMessage"] = "Error de conexión con el servidor: " + ex.Message;
+            }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = $"Error al eliminar solicitud: {ex.Message}";
+                // Intentar obtener el mensaje de error que viene en la respuesta de la API
+                string mensajeError = ex.Message;
+
+                if (ex.InnerException != null)
+                    mensajeError = ex.InnerException.Message;
+
+                if (mensajeError.Contains("No se puede eliminar una solicitud"))
+                {
+                    TempData["ErrorMessage"] = "No se puede eliminar esta solicitud porque ya está asignada a un técnico.";
+                }
+                else if (mensajeError.Contains("Solo se pueden eliminar solicitudes en estado Pendiente"))
+                {
+                    TempData["ErrorMessage"] = "Solo se pueden eliminar solicitudes en estado Pendiente.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Error al eliminar solicitud: " + mensajeError;
+                }
             }
 
             return RedirectToAction("Index");
         }
+
     }
 }
